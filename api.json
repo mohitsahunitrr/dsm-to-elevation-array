@@ -1,0 +1,8 @@
+{
+  "apis": [
+    {
+      "apiPath": "/:z/:x/:y",
+      "filePath": "./tiles/:z/:x/:y.png"
+    }
+  ]
+}
