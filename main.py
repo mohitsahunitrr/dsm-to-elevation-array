@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import json, sys
 
 from osgeo import gdal, gdalnumeric as gn
