@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import json, sys
+import json, os, sys
 
 from osgeo import gdal, gdalnumeric as gn
 
@@ -9,11 +9,23 @@ def main():
     """
     Entry function
     """
-    if len(sys.argv) != 4:
+    argv = sys.argv
+
+    validate_argv(argv)
+    extract_elevations(argv[1], argv[2], int(argv[3]))
+
+def validate_argv(argv):
+    if len(argv) != 4:
         print("You should pass two arguments to this script. Abort.")
         sys.exit(1)
 
-    extract_elevations(sys.argv[1], sys.argv[2], sys.argv[3])
+    if not os.path.isfile(argv[1]):
+        print("First argument for this script should be a input file")
+        sys.exit(1)
+
+    if not argv[3].isdigit():
+        print("Third argument for this script should be a positive integer")
+        sys.exit(1)
 
 def extract_elevations(input_path, result_path, number_of_bar):
     """
