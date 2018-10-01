@@ -31,12 +31,16 @@ def extract_elevations(input_path, result_path, number_of_bar):
     """
     Convert DSM file in input_path to histogram file of result_path
     """
-    input_array = gdal.Open(input_path).ReadAsArray()
+    input_tiff = gdal.Open(input_path)
+    input_array = input_tiff.ReadAsArray()
+    no_data_value = input_tiff.GetRasterBand(1).GetNoDataValue()
 
     if len(input_array.shape) != 2:
         raise ValueError("DSM should have only one band data")
 
-    (output_counts, output_bins) = gn.histogram(input_array.flatten(), bins=number_of_bar)
+    input_1d_array = input_array.flatten()
+    data_only_1d_array = gn.extract(input_1d_array != no_data_value, input_1d_array)
+    (output_counts, output_bins) = gn.histogram(data_only_1d_array, bins=number_of_bar)
     output_file = open(result_path, 'w')
     json.dump({ "counts": output_counts.tolist(), "bins": output_bins.tolist() }, output_file, separators=(",", ":"))
     output_file.write('\n')
