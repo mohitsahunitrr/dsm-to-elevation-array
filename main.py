@@ -31,20 +31,48 @@ def extract_elevations(input_path, result_path, number_of_bar):
     """
     Convert DSM file in input_path to histogram file of result_path
     """
-    input_tiff = gdal.Open(input_path)
-    input_array = input_tiff.ReadAsArray()
-    no_data_value = input_tiff.GetRasterBand(1).GetNoDataValue()
+    def extract_elevations_of_block(block_2d):
+        block_1d = block_2d.flatten()
+        block_1d_without_no_data = gn.extract(block_1d != no_data_value, block_1d)
+        return gn.histogram(block_1d_without_no_data, bins=gn.linspace(input_minimum, input_maximum, number_of_bar))
 
-    if len(input_array.shape) != 2:
+    def summarize_block(previous_result, result):
+        if previous_result is None:
+            return result
+        else:
+            return (previous_result[0] + result[0], previous_result[1])
+
+    input_tiff = gdal.Open(input_path)
+
+    if input_tiff.RasterCount != 1:
         raise ValueError("DSM should have only one band data")
 
-    input_1d_array = input_array.flatten()
-    data_only_1d_array = gn.extract(input_1d_array != no_data_value, input_1d_array)
-    (output_counts, output_bins) = gn.histogram(data_only_1d_array, bins=number_of_bar)
+    input_band = input_tiff.GetRasterBand(1)
+    input_minimum = input_band.GetMinimum()
+    input_maximum = input_band.GetMaximum()
+    no_data_value = input_band.GetNoDataValue()
+
+    (output_counts, output_bins) = loop_through_blocks(input_band, 500, extract_elevations_of_block, summarize_block)
     output_file = open(result_path, 'w')
     json.dump({ "counts": output_counts.tolist(), "bins": output_bins.tolist() }, output_file, separators=(",", ":"))
     output_file.write('\n')
     output_file.close()
-    
+
+def loop_through_blocks(input_band, block_size, calc, summarize):
+    x_size = input_band.XSize
+    y_size = input_band.YSize
+    result = None
+
+    for x_offset in range(0, x_size, block_size):
+        x_width = min(block_size, x_size - x_offset)
+
+        for y_offset in range(0, y_size, block_size):
+            y_width = min(block_size, y_size - y_offset)
+            block = input_band.ReadAsArray(x_offset, y_offset, x_width, y_width)
+
+            result = summarize(result, calc(block))
+
+    return result
+
 if __name__ == "__main__":
     main()
