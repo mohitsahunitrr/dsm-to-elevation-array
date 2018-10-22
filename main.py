@@ -52,9 +52,9 @@ def extract_elevations(input_path, result_path, number_of_bar):
     no_data_value = input_band.GetNoDataValue()
 
     (output_counts, output_bins) = loop_through_blocks(input_band, 500, extract_elevations_of_block, summarize_block)
-    output_file = open(result_path, 'w')
+    output_file = open(result_path, "w")
     json.dump({ "counts": output_counts.tolist(), "bins": output_bins.tolist() }, output_file, separators=(",", ":"))
-    output_file.write('\n')
+    output_file.write("\n")
     output_file.close()
 
 def loop_through_blocks(input_band, block_size, calc, summarize):
