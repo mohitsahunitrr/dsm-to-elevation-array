@@ -48,8 +48,7 @@ def extract_elevations(input_path, result_path, number_of_bar):
         raise ValueError("DSM should have only one band data")
 
     input_band = input_tiff.GetRasterBand(1)
-    input_minimum = input_band.GetMinimum()
-    input_maximum = input_band.GetMaximum()
+    (input_minimum, input_maximum, _, _) = input_band.GetStatistics(True, True)
     no_data_value = input_band.GetNoDataValue()
 
     (output_counts, output_bins) = loop_through_blocks(input_band, 500, extract_elevations_of_block, summarize_block)
