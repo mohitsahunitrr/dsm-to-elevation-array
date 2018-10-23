@@ -12,10 +12,10 @@ def main():
     argv = sys.argv
 
     validate_argv(argv)
-    extract_elevations(argv[1], argv[2], int(argv[3]))
+    extract_elevations(argv[1], int(argv[3]))
 
 def validate_argv(argv):
-    if len(argv) != 4:
+    if len(argv) != 3:
         print("You should pass two arguments to this script. Abort.")
         sys.exit(1)
 
@@ -23,11 +23,11 @@ def validate_argv(argv):
         print("First argument for this script should be a input file")
         sys.exit(1)
 
-    if not argv[3].isdigit():
-        print("Third argument for this script should be a positive integer")
+    if not argv[2].isdigit():
+        print("Second argument for this script should be a positive integer")
         sys.exit(1)
 
-def extract_elevations(input_path, result_path, number_of_bar):
+def extract_elevations(input_path, number_of_bar):
     """
     Convert DSM file in input_path to histogram file of result_path
     """
@@ -52,10 +52,8 @@ def extract_elevations(input_path, result_path, number_of_bar):
     no_data_value = input_band.GetNoDataValue()
 
     (output_counts, output_bins) = loop_through_blocks(input_band, 500, extract_elevations_of_block, summarize_block)
-    output_file = open(result_path, "w")
-    json.dump({ "counts": output_counts.tolist(), "bins": output_bins.tolist() }, output_file, separators=(",", ":"))
-    output_file.write("\n")
-    output_file.close()
+    result = json.dump({ "counts": output_counts.tolist(), "bins": output_bins.tolist() }, separators=(",", ":"))
+    print(result)
 
 def loop_through_blocks(input_band, block_size, calc, summarize):
     x_size = input_band.XSize
